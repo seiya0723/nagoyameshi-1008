@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block main %}
+<h2>マイページ</h2>
+
+<h2>会員情報の編集</h2>
+
+<form action="{% url 'edit_profile' %}" method="post">
+    {% csrf_token %}
+    
+    <input type="email" name="email" value="{{ form.email.value|default:request.user.email }}">
+    <input type="password" name="password" placeholder="新しいパスワード (任意)">
+    <input type="submit" value="保存">
+</form>
+
+
+
+<h2>お気に入りした店舗</h2>
+{% if favorites %}
+    {% for favorite in favorites %}
+    <div>
+        <a href="{% url 'restaurant' favorite.restaurant.id %}">{{ favorite.restaurant.name }}</a>
+    </div>
+    {% endfor %}
+{% else %}
+    <p>お気に入りした店舗はありません。</p>
+{% endif %}    
+
+
+<h2>投稿したレビュー一覧</h2>
+{% if reviews %}
+    {% for review in reviews %}
+    <div>
+        <div>店舗: {{ review.restaurant.name }}</div>
+        <div>投稿内容: {{ review.content }}</div>
+        <a href="{% url 'edit_review' review.id %}">編集する</a>
+
+        <!-- 削除フォーム: 削除処理をPOSTで送信 -->
+        <form action="{% url 'delete_review' review.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="submit" value="削除する" onclick="return confirm('本当に削除しますか？');">
+        </form>
+    </div>
+    {% endfor %}
+{% else %}
+    <p>投稿したレビューはありません。</p>
+{% endif %}
+
+<h2>予約した店舗一覧</h2>
+{% if reservations %}
+    {% for reservation in reservations %}
+    <div>
+        <div>店舗: {{ reservation.restaurant.name }}</div>
+        <div>予約日時: {{ reservation.datetime }}</div>
+        <div>予約人数: {{ reservation.headcount }}</div>
+
+        <form action="{% url 'cancel_reservation' reservation.id %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="予約をキャンセル">
+        </form>
+    </div>
+    {% endfor %}
+{% else %}
+    <p>予約した店舗はありません。</p>
+{% endif %}
+
+
+
+<h2>有料会員登録</h2>
+
+{% if is_premium %}
+    <!-- プレミアム会員の場合 -->
+    <a href="{% url 'portal' %}">有料会員設定</a>
+
+    <!-- プレミアム会員解約ボタン -->
+    <form action="{% url 'cancel_premium' %}" method="post">
+        {% csrf_token %}
+        <input type="submit" value="有料会員を解約する">
+    </form>
+{% else %}
+    <!-- プレミアム会員でない場合 -->
+    <form action="{% url 'checkout' %}" method="post">
+        {% csrf_token %}
+        <input type="submit" value="有料会員登録をする">
+    </form>
+{% endif %}
+
+{% endblock %}
